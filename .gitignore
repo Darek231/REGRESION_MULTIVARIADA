@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Variables de entorno
+.env
+.env.*
+
+# IDEs / sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Datos subidos por el usuario (el CSV de ejemplo SÍ se versiona)
+uploads/
+data/*
+!data/viviendas_ejemplo.csv
+!data/.gitkeep
+
+# Exportaciones
+*.log
+*.png
+!static/**/*.png

@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Constela · Regresión multivariada</title>
+  <meta name="description" content="Sistema de regresión multivariada con validación estadística — Investigación Operativa II">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 4 28 26H4z' fill='none' stroke='%238052ff' stroke-width='3'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<!-- ───────────── NAV ───────────── -->
+<header class="nav">
+  <a class="logo" href="#top" aria-label="Constela">
+    <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true">
+      <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#8052ff"/><stop offset="1" stop-color="#15846e"/></linearGradient></defs>
+      <path d="M16 3 29 27H3z" fill="none" stroke="url(#lg)" stroke-width="3" stroke-linejoin="round"/>
+    </svg>
+    <span>Constela</span>
+  </a>
+  <nav class="nav-links" aria-label="Pasos">
+    <a href="#paso-1">Datos</a>
+    <a href="#paso-2">Limpieza</a>
+    <a href="#paso-3">Explorar</a>
+    <a href="#paso-4">Modelo</a>
+    <a href="#paso-5">Validación</a>
+    <a href="#paso-6">Gráficos</a>
+  </nav>
+</header>
+
+<!-- ───────────── HERO ───────────── -->
+<section class="hero" id="top">
+  <div class="hero-copy">
+    <p class="label">Investigación Operativa II · Práctica</p>
+    <h1 class="display">Encuentra la señal en tus datos.</h1>
+    <p class="lead">Carga un CSV, límpialo, estima una regresión multivariada y valida cada supuesto del modelo — con estadísticas, pruebas y gráficos en un solo lugar.</p>
+    <a href="#paso-1" class="btn" id="cta">Comenzar</a>
+  </div>
+  <div class="hero-art"><canvas id="constellation" aria-label="Constelación de partículas con forma de cerebro"></canvas></div>
+</section>
+
+<main>
+
+<!-- ───────────── 01 DATOS ───────────── -->
+<section class="step" id="paso-1">
+  <div class="step-head">
+    <p class="label">01 — Datos</p>
+    <h2>Carga tu base de datos.</h2>
+    <p class="body">Archivo CSV con la variable dependiente y las independientes. El delimitador se detecta solo y los nombres de variables se validan.</p>
+  </div>
+  <div class="step-body">
+    <label class="drop" id="drop" tabindex="0">
+      <input type="file" id="file" accept=".csv,.txt,.tsv" hidden>
+      <span class="drop-title">Arrastra tu CSV aquí</span>
+      <span class="drop-sub">o haz clic para seleccionarlo · máx. 15 MB</span>
+    </label>
+    <div class="row-actions">
+      <button class="ghost" id="btn-sample" type="button">Usar datos de ejemplo (viviendas · 8 variables)</button>
+    </div>
+
+    <div id="load-info" class="hidden">
+      <div class="metrics" id="load-metrics"></div>
+      <p class="note" id="rename-note"></p>
+      <h3 class="mini">Vista previa · primeras filas</h3>
+      <div class="table-wrap"><table id="preview-table"></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── 02 LIMPIEZA ───────────── -->
+<section class="step locked" id="paso-2">
+  <div class="step-head">
+    <p class="label">02 — Limpieza</p>
+    <h2>Deja los datos listos.</h2>
+    <p class="body">Imputa o elimina faltantes, detecta atípicos y convierte tipos. Cada ejecución parte de los datos originales, así que puedes probar estrategias sin miedo.</p>
+  </div>
+  <div class="step-body">
+    <h3 class="mini">Calidad por columna</h3>
+    <div class="table-wrap"><table id="quality-table"></table></div>
+
+    <div class="controls">
+      <div class="control">
+        <span class="control-label">Valores faltantes</span>
+        <div class="chips" data-group="missing">
+          <button class="chip" data-v="none">Mantener</button>
+          <button class="chip" data-v="drop">Eliminar filas</button>
+          <button class="chip on" data-v="mean">Imputar media</button>
+          <button class="chip" data-v="median">Imputar mediana</button>
+        </div>
+      </div>
+      <div class="control">
+        <span class="control-label">Valores atípicos</span>
+        <div class="chips" data-group="outliers">
+          <button class="chip on" data-v="none">Solo detectar</button>
+          <button class="chip" data-v="remove">Eliminar filas</button>
+          <button class="chip" data-v="cap">Limitar a extremos</button>
+        </div>
+      </div>
+      <div class="control">
+        <span class="control-label">Criterio de detección</span>
+        <div class="chips" data-group="method">
+          <button class="chip on" data-v="iqr">IQR · 1.5</button>
+          <button class="chip" data-v="zscore">Z-score · 3</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row-actions">
+      <button class="btn" id="btn-clean" type="button">Aplicar limpieza</button>
+      <button class="ghost" id="btn-reset" type="button">Restablecer datos originales</button>
+    </div>
+    <ul class="log" id="clean-log"></ul>
+  </div>
+</section>
+
+<!-- ───────────── 03 EXPLORAR ───────────── -->
+<section class="step locked" id="paso-3">
+  <div class="step-head">
+    <p class="label">03 — Explorar</p>
+    <h2>Mira cómo se comportan.</h2>
+    <p class="body">Estadísticas descriptivas de cada variable numérica: media, varianza, mínimo, cuartiles y máximo.</p>
+  </div>
+  <div class="step-body">
+    <div class="table-wrap"><table id="describe-table"></table></div>
+  </div>
+</section>
+
+<!-- ───────────── 04 MODELO ───────────── -->
+<section class="step locked" id="paso-4">
+  <div class="step-head">
+    <p class="label">04 — Modelo</p>
+    <h2>Estima la regresión.</h2>
+    <p class="body"><span class="eq">Y = β₀ + β₁X₁ + β₂X₂ + … + βₖXₖ + ε</span><br>Elige Y y las X; el sistema calcula β, error estándar, t y p-valor.</p>
+  </div>
+  <div class="step-body">
+    <div class="control">
+      <span class="control-label">Variable dependiente · Y</span>
+      <div class="chips" id="y-chips"></div>
+    </div>
+    <div class="control">
+      <span class="control-label">Variables independientes · X
+        <button class="ghost tiny" id="x-all" type="button">todas</button>
+        <button class="ghost tiny" id="x-none" type="button">ninguna</button></span>
+      <div class="chips" id="x-chips"></div>
+    </div>
+    <p class="formula" id="formula-preview"></p>
+    <div class="row-actions"><button class="btn" id="btn-fit" type="button">Estimar modelo</button></div>
+
+    <div id="fit-out" class="hidden">
+      <div class="metrics" id="fit-metrics"></div>
+      <p class="formula" id="fit-equation"></p>
+      <div class="table-wrap"><table id="coef-table"></table></div>
+      <p class="note" id="fit-note"></p>
+      <div class="row-actions"><button class="ghost" id="btn-csv" type="button">Descargar coeficientes (CSV)</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── 05 VALIDACIÓN ───────────── -->
+<section class="step locked" id="paso-5">
+  <div class="step-head">
+    <p class="label">05 — Validación</p>
+    <h2>Pon a prueba los supuestos.</h2>
+    <p class="body">Normalidad de residuos, autocorrelación, homocedasticidad y multicolinealidad. Cada prueba trae su conclusión automática (α = 0.05).</p>
+  </div>
+  <div class="step-body">
+    <div class="control">
+      <span class="control-label">Normalidad de residuos</span>
+      <div class="chips" data-group="normality">
+        <button class="chip" data-v="shapiro">Shapiro-Wilk</button>
+        <button class="chip" data-v="ks">Kolmogórov-Smirnov</button>
+        <button class="chip" data-v="jb">Jarque-Bera</button>
+        <button class="chip on" data-v="all">Las tres</button>
+      </div>
+    </div>
+    <div class="control">
+      <span class="control-label">Homocedasticidad</span>
+      <div class="chips" data-group="hetero">
+        <button class="chip" data-v="bp">Breusch-Pagan</button>
+        <button class="chip" data-v="white">White</button>
+        <button class="chip on" data-v="all">Ambas</button>
+      </div>
+    </div>
+    <div class="row-actions"><button class="btn" id="btn-tests" type="button">Ejecutar pruebas</button></div>
+
+    <div id="tests-out" class="hidden">
+      <div class="verdict" id="verdict"></div>
+      <div class="tests" id="tests-list"></div>
+      <h3 class="mini">Multicolinealidad · VIF = 1 / (1 − R²ᵢ)</h3>
+      <div id="vif-list" class="vif"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────── 06 GRÁFICOS ───────────── -->
+<section class="step locked" id="paso-6">
+  <div class="step-head">
+    <p class="label">06 — Gráficos</p>
+    <h2>Míralo con tus ojos.</h2>
+    <p class="body">Dispersión de cada X contra Y, histograma de residuos, gráfico Q-Q y residuos estándar contra valores ajustados. Pasa el cursor sobre los puntos y descarga cada gráfico en PNG.</p>
+  </div>
+  <div class="step-body">
+    <div class="row-actions">
+      <button class="btn" id="btn-plots" type="button">Generar gráficos</button>
+      <button class="ghost hidden" id="btn-dl-all" type="button">Descargar todos (PNG)</button>
+    </div>
+    <div id="plots-out" class="hidden">
+      <h3 class="mini">5.1 · Dispersión Xᵢ vs Y</h3>
+      <div class="plot-grid" id="plots-scatter"></div>
+      <h3 class="mini">Diagnóstico de residuos</h3>
+      <div class="plot-grid" id="plots-resid"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <p>Constela · Práctica de Investigación Operativa II · Regresión multivariada (OLS)</p>
+</footer>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="tip" class="tip"></div>
+
+<script src="{{ url_for('static', filename='js/particles.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
